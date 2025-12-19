@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  Settings, 
-  RefreshCw, 
-  Package, 
-  ExternalLink, 
-  Search, 
-  CheckCircle2, 
+import {
+  Settings,
+  RefreshCw,
+  Package,
+  ExternalLink,
+  Search,
+  CheckCircle2,
   AlertCircle,
   Loader2,
   ChevronRight,
@@ -18,12 +18,12 @@ import { OrchestraService } from './services/orchestra';
 import { ShopifyService } from './services/shopify';
 
 const DEFAULT_CONFIG: AppConfig = {
-  orchestraClientId: '',
-  orchestraClientSecret: '',
-  orchestraBaseUrl: 'https://erp.ecopak.ca/OrchestraQualipiecesTest',
-  orchestraIdentityUrl: 'https://erp.ecopak.ca/Identity/connect/token',
-  shopifyStoreUrl: '',
-  shopifyAccessToken: ''
+  orchestraClientId: import.meta.env.VITE_ORCHESTRA_CLIENT_ID || '',
+  orchestraClientSecret: import.meta.env.VITE_ORCHESTRA_CLIENT_SECRET || '',
+  orchestraBaseUrl: import.meta.env.VITE_ORCHESTRA_BASE_URL || 'https://erp.ecopak.ca/OrchestraQualipiecesTest',
+  orchestraIdentityUrl: import.meta.env.VITE_ORCHESTRA_IDENTITY_URL || 'https://erp.ecopak.ca/Identity/connect/token',
+  shopifyStoreUrl: import.meta.env.VITE_SHOPIFY_STORE_URL || '',
+  shopifyAccessToken: import.meta.env.VITE_SHOPIFY_ACCESS_TOKEN || ''
 };
 
 const App: React.FC = () => {
@@ -31,7 +31,7 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('app_config');
     return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
   });
-  
+
   const [showSettings, setShowSettings] = useState(!config.orchestraClientId);
   const [items, setItems] = useState<OrchestraItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -72,27 +72,27 @@ const App: React.FC = () => {
     if (selectedIds.size === 0) return;
     setIsSyncing(true);
     const toSync = items.filter(i => selectedIds.has(i.id));
-    
+
     for (const item of toSync) {
-      setSyncLogs(prev => [{ 
-        itemId: item.id, 
-        itemNumber: item.itemNumber, 
-        status: SyncStatus.PENDING 
+      setSyncLogs(prev => [{
+        itemId: item.id,
+        itemNumber: item.itemNumber,
+        status: SyncStatus.PENDING
       }, ...prev]);
 
       try {
         const result = await shopify.createProduct(item);
-        
-        setSyncLogs(prev => prev.map(log => 
-          log.itemId === item.id 
-          ? { ...log, status: SyncStatus.SUCCESS, shopifyProductId: result.product.id } 
-          : log
+
+        setSyncLogs(prev => prev.map(log =>
+          log.itemId === item.id
+            ? { ...log, status: SyncStatus.SUCCESS, shopifyProductId: result.product.id }
+            : log
         ));
       } catch (err: any) {
-        setSyncLogs(prev => prev.map(log => 
-          log.itemId === item.id 
-          ? { ...log, status: SyncStatus.ERROR, message: err.message } 
-          : log
+        setSyncLogs(prev => prev.map(log =>
+          log.itemId === item.id
+            ? { ...log, status: SyncStatus.ERROR, message: err.message }
+            : log
         ));
       }
     }
@@ -114,9 +114,9 @@ const App: React.FC = () => {
               <p className="text-xs text-slate-500 font-medium">ERP TO SHOPIFY BRIDGE</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setShowSettings(!showSettings)}
               className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors"
             >
@@ -127,7 +127,7 @@ const App: React.FC = () => {
       </header>
 
       <main className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Left Column: Items List */}
         <div className="lg:col-span-8 flex flex-col gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -138,8 +138,8 @@ const App: React.FC = () => {
               </h2>
               <div className="relative w-full sm:w-64">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Search products..."
                   className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                   value={searchQuery}
@@ -147,7 +147,7 @@ const App: React.FC = () => {
                   onKeyDown={(e) => e.key === 'Enter' && loadItems()}
                 />
               </div>
-              <button 
+              <button
                 onClick={loadItems}
                 disabled={loading}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
@@ -162,8 +162,8 @@ const App: React.FC = () => {
                 <thead className="bg-slate-50 text-slate-500 font-medium">
                   <tr>
                     <th className="px-4 py-3 w-10">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                         onChange={(e) => {
                           if (e.target.checked) setSelectedIds(new Set(items.map(i => i.id)));
@@ -186,16 +186,16 @@ const App: React.FC = () => {
                     </tr>
                   ) : (
                     items.map((item) => (
-                      <tr 
-                        key={item.id} 
+                      <tr
+                        key={item.id}
                         className={`hover:bg-indigo-50/30 transition-colors cursor-pointer ${selectedIds.has(item.id) ? 'bg-indigo-50' : ''}`}
                         onClick={() => toggleSelection(item.id)}
                       >
                         <td className="px-4 py-3">
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             checked={selectedIds.has(item.id)}
-                            onChange={() => {}} // Handled by tr click
+                            onChange={() => { }} // Handled by tr click
                             className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                           />
                         </td>
@@ -237,7 +237,7 @@ const App: React.FC = () => {
               <ShoppingBag size={18} className="text-indigo-500" />
               Shopify Sync Actions
             </h2>
-            
+
             <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Selected Items:</span>
@@ -249,7 +249,7 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <button 
+            <button
               onClick={handleSync}
               disabled={selectedIds.size === 0 || isSyncing || !config.shopifyAccessToken}
               className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-100"
@@ -279,20 +279,20 @@ const App: React.FC = () => {
                       {log.status === SyncStatus.PENDING && <Loader2 className="animate-spin text-indigo-500 mt-0.5" size={16} />}
                       {log.status === SyncStatus.SUCCESS && <CheckCircle2 className="text-green-500 mt-0.5" size={16} />}
                       {log.status === SyncStatus.ERROR && <AlertCircle className="text-red-500 mt-0.5" size={16} />}
-                      
+
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate">{log.itemNumber}</p>
                         <p className="text-xs text-slate-500 truncate">
-                          {log.status === SyncStatus.PENDING ? 'Preparing data...' : 
-                           log.status === SyncStatus.SUCCESS ? 'Created successfully' : 
-                           log.message || 'Unknown error'}
+                          {log.status === SyncStatus.PENDING ? 'Preparing data...' :
+                            log.status === SyncStatus.SUCCESS ? 'Created successfully' :
+                              log.message || 'Unknown error'}
                         </p>
                       </div>
-                      
+
                       {log.shopifyProductId && (
-                        <a 
-                          href={`https://${config.shopifyStoreUrl}/admin/products/${log.shopifyProductId}`} 
-                          target="_blank" 
+                        <a
+                          href={`https://${config.shopifyStoreUrl}/admin/products/${log.shopifyProductId}`}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-slate-400 hover:text-indigo-600 transition-colors"
                         >
@@ -321,44 +321,48 @@ const App: React.FC = () => {
                 <RefreshCw size={20} className="rotate-45" />
               </button>
             </div>
-            
+
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-slate-500 uppercase">Orchestra API (ERP)</h3>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Identity URL</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
+                    placeholder={import.meta.env.VITE_ORCHESTRA_IDENTITY_URL || 'https://...'}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.orchestraIdentityUrl}
-                    onChange={(e) => setConfig({...config, orchestraIdentityUrl: e.target.value})}
+                    onChange={(e) => setConfig({ ...config, orchestraIdentityUrl: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Base Endpoint</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
+                    placeholder={import.meta.env.VITE_ORCHESTRA_BASE_URL || 'https://...'}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.orchestraBaseUrl}
-                    onChange={(e) => setConfig({...config, orchestraBaseUrl: e.target.value})}
+                    onChange={(e) => setConfig({ ...config, orchestraBaseUrl: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Client ID</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
+                    placeholder={import.meta.env.VITE_ORCHESTRA_CLIENT_ID || 'Client ID'}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.orchestraClientId}
-                    onChange={(e) => setConfig({...config, orchestraClientId: e.target.value})}
+                    onChange={(e) => setConfig({ ...config, orchestraClientId: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Client Secret</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
+                    placeholder={import.meta.env.VITE_ORCHESTRA_CLIENT_SECRET ? '••••••••' : 'Client Secret'}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.orchestraClientSecret}
-                    onChange={(e) => setConfig({...config, orchestraClientSecret: e.target.value})}
+                    onChange={(e) => setConfig({ ...config, orchestraClientSecret: e.target.value })}
                   />
                 </div>
               </div>
@@ -367,22 +371,22 @@ const App: React.FC = () => {
                 <h3 className="text-sm font-bold text-slate-500 uppercase">Shopify Admin API</h3>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Store URL (e.g. my-shop.myshopify.com)</label>
-                  <input 
-                    type="text" 
-                    placeholder="mystore.myshopify.com"
+                  <input
+                    type="text"
+                    placeholder={import.meta.env.VITE_SHOPIFY_STORE_URL || 'mystore.myshopify.com'}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.shopifyStoreUrl}
-                    onChange={(e) => setConfig({...config, shopifyStoreUrl: e.target.value})}
+                    onChange={(e) => setConfig({ ...config, shopifyStoreUrl: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Admin Access Token</label>
-                  <input 
-                    type="password" 
-                    placeholder="shpat_..."
+                  <input
+                    type="password"
+                    placeholder={import.meta.env.VITE_SHOPIFY_ACCESS_TOKEN ? 'shpat_••••••••' : 'shpat_...'}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.shopifyAccessToken}
-                    onChange={(e) => setConfig({...config, shopifyAccessToken: e.target.value})}
+                    onChange={(e) => setConfig({ ...config, shopifyAccessToken: e.target.value })}
                   />
                 </div>
                 <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 mt-4">
@@ -394,7 +398,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-              <button 
+              <button
                 onClick={() => {
                   setShowSettings(false);
                   loadItems();
