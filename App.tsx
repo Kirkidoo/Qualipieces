@@ -20,7 +20,7 @@ import { ShopifyService } from './services/shopify';
 const DEFAULT_CONFIG: AppConfig = {
   orchestraClientId: import.meta.env.VITE_ORCHESTRA_CLIENT_ID || '',
   orchestraClientSecret: import.meta.env.VITE_ORCHESTRA_CLIENT_SECRET || '',
-  orchestraBaseUrl: import.meta.env.VITE_ORCHESTRA_BASE_URL || 'https://erp.ecopak.ca/OrchestraQualipiecesTest',
+  orchestraBaseUrl: import.meta.env.VITE_ORCHESTRA_BASE_URL || 'https://erp.ecopak.ca/OrchestraQualipiecesApiTest',
   orchestraIdentityUrl: import.meta.env.VITE_ORCHESTRA_IDENTITY_URL || 'https://erp.ecopak.ca/Identity/connect/token',
   shopifyStoreUrl: import.meta.env.VITE_SHOPIFY_STORE_URL || '',
   shopifyAccessToken: import.meta.env.VITE_SHOPIFY_ACCESS_TOKEN || ''
@@ -29,7 +29,21 @@ const DEFAULT_CONFIG: AppConfig = {
 const App: React.FC = () => {
   const [config, setConfig] = useState<AppConfig>(() => {
     const saved = localStorage.getItem('app_config');
-    return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+    const initial = saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+
+    // Migration: Force update from legacy absolute URL to proxy URL
+    if (initial.orchestraBaseUrl?.includes('https://erp.ecopak.ca')) {
+      initial.orchestraBaseUrl = DEFAULT_CONFIG.orchestraBaseUrl;
+    }
+    // Migration: Fix incorrect endpoint name in cached config
+    if (initial.orchestraBaseUrl?.includes('OrchestraQualipiecesTest')) {
+      initial.orchestraBaseUrl = initial.orchestraBaseUrl.replace('OrchestraQualipiecesTest', 'OrchestraQualipiecesApiTest');
+    }
+    if (initial.orchestraIdentityUrl?.includes('https://erp.ecopak.ca')) {
+      initial.orchestraIdentityUrl = DEFAULT_CONFIG.orchestraIdentityUrl;
+    }
+
+    return initial;
   });
 
   const [showSettings, setShowSettings] = useState(!config.orchestraClientId);
@@ -329,7 +343,6 @@ const App: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Identity URL</label>
                   <input
                     type="text"
-                    placeholder={import.meta.env.VITE_ORCHESTRA_IDENTITY_URL || 'https://...'}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.orchestraIdentityUrl}
                     onChange={(e) => setConfig({ ...config, orchestraIdentityUrl: e.target.value })}
@@ -339,7 +352,6 @@ const App: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Base Endpoint</label>
                   <input
                     type="text"
-                    placeholder={import.meta.env.VITE_ORCHESTRA_BASE_URL || 'https://...'}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.orchestraBaseUrl}
                     onChange={(e) => setConfig({ ...config, orchestraBaseUrl: e.target.value })}
@@ -349,7 +361,6 @@ const App: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Client ID</label>
                   <input
                     type="text"
-                    placeholder={import.meta.env.VITE_ORCHESTRA_CLIENT_ID || 'Client ID'}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.orchestraClientId}
                     onChange={(e) => setConfig({ ...config, orchestraClientId: e.target.value })}
@@ -359,7 +370,6 @@ const App: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Client Secret</label>
                   <input
                     type="password"
-                    placeholder={import.meta.env.VITE_ORCHESTRA_CLIENT_SECRET ? '••••••••' : 'Client Secret'}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.orchestraClientSecret}
                     onChange={(e) => setConfig({ ...config, orchestraClientSecret: e.target.value })}
@@ -373,7 +383,7 @@ const App: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Store URL (e.g. my-shop.myshopify.com)</label>
                   <input
                     type="text"
-                    placeholder={import.meta.env.VITE_SHOPIFY_STORE_URL || 'mystore.myshopify.com'}
+                    placeholder="mystore.myshopify.com"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.shopifyStoreUrl}
                     onChange={(e) => setConfig({ ...config, shopifyStoreUrl: e.target.value })}
@@ -383,7 +393,7 @@ const App: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Admin Access Token</label>
                   <input
                     type="password"
-                    placeholder={import.meta.env.VITE_SHOPIFY_ACCESS_TOKEN ? 'shpat_••••••••' : 'shpat_...'}
+                    placeholder="shpat_..."
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
                     value={config.shopifyAccessToken}
                     onChange={(e) => setConfig({ ...config, shopifyAccessToken: e.target.value })}
@@ -406,6 +416,14 @@ const App: React.FC = () => {
                 className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100"
               >
                 Save & Continue
+              </button>
+            </div>
+            <div className="px-6 pb-4 flex justify-center">
+              <button
+                onClick={() => setConfig(DEFAULT_CONFIG)}
+                className="text-xs text-slate-400 hover:text-indigo-600 underline"
+              >
+                Reset to API Defaults
               </button>
             </div>
           </div>

@@ -35,7 +35,7 @@ export class OrchestraService {
   async fetchItems(query: { filter?: string; pageNumber?: number; pageSize?: number } = {}): Promise<OrchestraItem[]> {
     if (!this.accessToken) await this.authenticate();
 
-    const url = new URL(`${this.config.orchestraBaseUrl}/api/Items`);
+    const url = new URL(`${this.config.orchestraBaseUrl}/api/Items`, window.location.origin);
     if (query.filter) url.searchParams.append('Filter', query.filter);
     if (query.pageNumber) url.searchParams.append('PageNumber', query.pageNumber.toString());
     if (query.pageSize) url.searchParams.append('PageSize', query.pageSize.toString());
