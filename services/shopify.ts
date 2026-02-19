@@ -9,14 +9,18 @@ export class ShopifyService {
   }
 
   async createProduct(item: OrchestraItem): Promise<any> {
-    const shopifyUrl = `https://${this.config.shopifyStoreUrl}/admin/api/2024-01/products.json`;
-    
+    const isBrowser = typeof window !== 'undefined';
+    const isLocalhost = isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const baseUrl = isLocalhost ? '/proxy/shopify' : `https://${this.config.shopifyStoreUrl}`;
+
+    const shopifyUrl = `${baseUrl}/admin/api/2024-01/products.json`;
+
     const productPayload = {
       product: {
         title: item.descriptionEN || item.description || `Product ${item.itemNumber}`,
         body_html: item.description2EN || item.description2 || 'No description provided.',
-        vendor: 'Orchestra Import',
-        product_type: item.category || 'General',
+        vendor: 'Qualipièces',
+        product_type: item.itemType || item.category || 'General',
         status: 'draft',
         variants: [
           {
@@ -32,12 +36,18 @@ export class ShopifyService {
       }
     };
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-Shopify-Access-Token': this.config.shopifyAccessToken,
+    };
+
+    if (isLocalhost) {
+      headers['x-target-store'] = this.config.shopifyStoreUrl;
+    }
+
     const response = await fetch(shopifyUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Access-Token': this.config.shopifyAccessToken,
-      },
+      headers,
       body: JSON.stringify(productPayload),
     });
 

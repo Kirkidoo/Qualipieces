@@ -15,6 +15,17 @@ export default defineConfig(({ mode }) => {
           target: 'https://erp.ecopak.ca',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/proxy\/erp/, ''),
+        },
+        '/proxy/shopify': {
+          target: 'https://cdn.shopify.com', // Placeholder, overridden by router
+          changeOrigin: true,
+          router: (req) => {
+            const storeUrl = req.headers['x-target-store'];
+            if (storeUrl) {
+              return `https://${storeUrl}`;
+            }
+          },
+          rewrite: (path) => path.replace(/^\/proxy\/shopify/, '')
         }
       }
     },
