@@ -12,19 +12,15 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       proxy: {
         '/proxy/erp': {
-          target: 'https://erp.ecopak.ca',
+          target: env.VITE_ORCHESTRA_BASE_URL?.includes('http')
+            ? env.VITE_ORCHESTRA_BASE_URL
+            : 'https://erp.ecopak.ca',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/proxy\/erp/, ''),
         },
         '/proxy/shopify': {
-          target: 'https://cdn.shopify.com', // Placeholder, overridden by router
+          target: `https://${env.VITE_SHOPIFY_STORE_URL}`,
           changeOrigin: true,
-          router: (req) => {
-            const storeUrl = req.headers['x-target-store'];
-            if (storeUrl) {
-              return `https://${storeUrl}`;
-            }
-          },
           rewrite: (path) => path.replace(/^\/proxy\/shopify/, '')
         }
       }
