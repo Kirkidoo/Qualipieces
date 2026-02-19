@@ -51,6 +51,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [syncLogs, setSyncLogs] = useState<SyncRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchField, setSearchField] = useState('description');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -65,7 +66,18 @@ const App: React.FC = () => {
     if (!config.orchestraClientId || !config.orchestraClientSecret) return;
     setLoading(true);
     try {
-      const filter = searchQuery ? `description=*${searchQuery}` : undefined;
+      let filter: string | undefined = undefined;
+
+      if (searchQuery) {
+        if (searchField === 'description' || searchField === 'category') {
+          filter = `${searchField}=*${searchQuery}`;
+        } else {
+          // For numeric fields like retail or stock, maybe exact match or >= ? 
+          // Let's try exact match first
+          filter = `${searchField}=${searchQuery}`;
+        }
+      }
+
       const data = await orchestra.fetchItems({ filter, pageSize: 50 });
       setItems(data);
     } catch (err: any) {
@@ -150,16 +162,28 @@ const App: React.FC = () => {
                 <Database size={18} className="text-slate-400" />
                 Orchestra ERP Items
               </h2>
-              <div className="relative w-full sm:w-64">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && loadItems()}
-                />
+              <div className="flex gap-2 w-full sm:w-auto">
+                <select
+                  value={searchField}
+                  onChange={(e) => setSearchField(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="description">Product Info</option>
+                  <option value="category">Category</option>
+                  <option value="retail">Price</option>
+                  <option value="stock">Stock</option>
+                </select>
+                <div className="relative flex-1 sm:w-64">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && loadItems()}
+                  />
+                </div>
               </div>
               <button
                 onClick={loadItems}
